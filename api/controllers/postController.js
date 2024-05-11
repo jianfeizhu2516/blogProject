@@ -32,15 +32,18 @@ export const addPost = (req, res) => {
         req.body.date,
         req.body.userId
     ]
-    db.query(q,[values],(err,data)=>{
-        if(err) return res.status(500).json(err);
+    db.query(q, [values], (err, data) => {
+        if (err) return res.status(500).json(err);
         return res.json("post has been successfully created")
     })
 }
 
 export const deletePost = (req, res) => {
-    //if (token == null) return res.status(401).json("Not authenticated !");
+    if (token == null) return res.status(401).json("Not authenticated !");
     //.json("message") 这个message会出现在控制台network的网络请求response里
+    jwt.verify(token, "jwtkey", (err, userInfo) => {
+        if (err) return res.status(403).json("token is not valid")
+    })
     const postId = req.params.id;
     const q = "DELETE FROM posts WHERE `id`=?";
     db.query(q, [postId], (err, data) => {
@@ -50,18 +53,23 @@ export const deletePost = (req, res) => {
 }
 
 export const updatePost = (req, res) => {
-    const q =
-    "UPDATE posts SET `title`=?,`desc`=?,`img`=?,`cat`=? WHERE `id` = ?";
-    const values = [
-        req.body.title,
-        req.body.desc,
-        req.body.img,
-        req.body.cat
-    ]
-    const postId = req.params.id;
-    db.query(q,[...values,postId],(err,data)=>{
-        if(err) return res.status(500).json(err);
-        return res.json("post has been successfully updated")
+    const token = req.cookies.access_token;
+    if (!token) return res, status(401).json("Not authenticated!!")
+    jwt.verify(token, "jwtkey", (err, userInfo) => {
+        if (err) return res.status(403).json("Token is not valid");
+        const q =
+            "UPDATE posts SET `title`=?,`desc`=?,`img`=?,`cat`=? WHERE `id` = ?";
+        const values = [
+            req.body.title,
+            req.body.desc,
+            req.body.img,
+            req.body.cat
+        ]
+        const postId = req.params.id;
+        db.query(q, [...values, postId,userInfo.id], (err, data) => {
+            if (err) return res.status(500).json(err);
+            return res.json("post has been successfully updated")
+        })
     })
 }
 
@@ -70,8 +78,8 @@ export const updatePost = (req, res) => {
 
 
 
-postMessage.map((eachPost)=>{
-    return(
-        <div></div>
-    )
-})
+// postMessage.map((eachPost)=>{
+//     return(
+//         <div></div>
+//     )
+// })
